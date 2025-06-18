@@ -52,13 +52,13 @@ cmp.plot=function(result,option="rcs"){
     col.ext=paste(c("Risk_","L_","U_"),option,sep="")
     result=result[,c("v",col.ext)]
     plot(result$v, result[,2], type = "l", col = "blue", lty = 1, ylim = c(0,1),
-         xlab = "v", ylab = "Risk", main = "Predictiveness Curve")
+         xlab = "v", ylab = "R(v)", main = "Predictiveness Curve")
     lines(result$v, result[,3], col = "black", lty = 2)
     lines(result$v, result[,4], col = "black", lty = 2)
   }
   if(option=="both"){
     plot(result$v, result$Risk_rcs, type = "l", col = "black", lty = 1, ylim = c(0,1),
-         xlab = "v", ylab = "Risk", main = "Predictiveness Curve",lwd=1.5)
+         xlab = "v", ylab = "R(v)", main = "Predictiveness Curve",lwd=1.5)
     lines(result$v, result$L_rcs, col = "black", lty = 2)
     lines(result$v, result$U_rcs, col = "black", lty = 2)
     lines(result$v,result$Risk_glm,col="darkgray",lwd=1.5)
