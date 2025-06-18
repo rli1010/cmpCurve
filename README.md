@@ -13,7 +13,8 @@ library(cmpCurve)<br>
 data(example_data)<br><br>
 cmpCurve(Surv(Y,delta) ~ Z1+Z2, data = example_data, cvtimes=5, tau=4,ptbTime=30,option="both")<br>
 
-![image](https://github.com/user-attachments/assets/c2cebe53-3154-4bad-8423-b7dd02b83653)
+![image](https://github.com/user-attachments/assets/d55922d0-b57f-48b8-a131-9dc48ef386a7)
+
 
 
 ## Ref
