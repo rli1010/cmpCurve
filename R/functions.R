@@ -5,7 +5,7 @@ expit <- function(x) exp(x) / (1 + exp(x))
 logit <- function(x) log(x / (1 - x))
 
 # Main function
-cmpCurve <- function(formula, data,  tau, option="both", cvtimes=10, df = 3, ptbTime=400,seed0=1234) {
+cmpCurve <- function(formula, data,  tau, option="rcs", cvtimes=10, df = 3, ptbTime=400,seed0=1234) {
   ##For event type, code the cause of interest as 1 and random censor as 0, all other causes as 2
   ##df is for RCS splines, commonly 3-5
   ##cvtimes is the number of repetitions for cross-validation
