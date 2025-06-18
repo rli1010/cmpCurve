@@ -11,3 +11,5 @@ Encoding: UTF-8
 LazyData: true
 Depends: 
     R (>= 3.5)
+URL: https://github.com/rli1010/cmpCurve
+BugReports: https://github.com/rli1010/cmpCurve/issues
