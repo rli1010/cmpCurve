@@ -85,7 +85,8 @@ test.data <- function(train, test, formula, df, Time, status) {
   formula0=paste(Time,as.character(formula_rhs),collapse="")
   test_matrix <- model.matrix(stats::formula(formula)[-2], data = test)[, -1]  # remove intercept
   # Calculate caus1.xi using matrix multiplication
-  caus1.xi <- test_matrix %*% fg$coefficients
+  if(length(fg$coefficients)>1){caus1.xi <- test_matrix %*% fg$coefficients}
+  if(length(fg$coefficients)==1){caus1.xi <- test_matrix*fg$coefficients}
   return(cbind(test, caus1.xi))
 }
 
@@ -160,6 +161,7 @@ rpt.risk <- function(data, ptb.weight, cvtimes, formula, df, tau, Time, status) 
   rpt.perturb <- colMeans(avg.ptb)
   return(rpt.perturb)
 }
+
 
 
 
