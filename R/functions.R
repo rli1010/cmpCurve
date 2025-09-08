@@ -1,32 +1,31 @@
 # Load necessary libraries
-#lapply(c("survival", "Hmisc", "rms", "cmprsk", "readr"), require, character.only = TRUE)
-
 expit <- function(x) exp(x) / (1 + exp(x))
 logit <- function(x) log(x / (1 - x))
 
 # Main function
-cmpCurve <- function(formula, data,  tau, option="rcs", plot.option=option, cvtimes=10, df = 3, ptbTime=400,seed0=1234) {
+cmpCurve <- function(formula, data,  tau, option="rcs", plot.option=option, cvtimes=10, df = 3, ptbTime=400,seed0=1234,nosplit0=FALSE) {
   ##For event type, code the cause of interest as 1 and random censor as 0, all other causes as 2
   ##df is for RCS splines, commonly 3-5
   ##cvtimes is the number of repetitions for cross-validation
   ##ptbTime is the number of perturbations
   ##option with "rcs","glm", or "both", used for plotting
-
+  
   call <- match.call()
   formula <- as.formula(formula)
   Time=as.character(formula[[2]][[2]]) ###extract Y from formula
   status=as.character(formula[[2]][[3]])
-
   var.all=all.vars(formula)
   data=data[complete.cases(data[, var.all]), ] #keep complete case
+  num.cov=length(var.all)-2
 
   # point estimate, seed0 used for cross-validation and subsequent perturbation
   set.seed(seed0)
-  predict <- rpt.risk(data, ptb.weight = rep(1, nrow(data)), cvtimes, formula, df, tau, Time, status)
+  predict <- rpt.risk(data, ptb.weight = rep(1, nrow(data)), cvtimes, formula, df, tau, Time, status, nosplit0)
 
   # perturbation ptbTime=400 times and create CI
   data_rep <- replicate(ptbTime, rpt.risk(data, ptb.weight = rexp(nrow(data), rate = 1),
                                           cvtimes, formula, df, tau, Time, status))
+  
   df <- data.frame(matrix(unlist(data_rep), nrow = ptbTime, byrow = TRUE))
   trans <- logit(df)
   se.trans <- apply(trans, 2, sd)
@@ -86,7 +85,7 @@ test.data <- function(train, test, formula, df, Time, status) {
   test_matrix <- model.matrix(stats::formula(formula)[-2], data = test)[, -1]  # remove intercept
   # Calculate caus1.xi using matrix multiplication
   if(length(fg$coefficients)>1){caus1.xi <- test_matrix %*% fg$coefficients}
-  if(length(fg$coefficients)==1){caus1.xi <- test_matrix*fg$coefficients}
+  if(length(fg$coefficients)==1){caus1.xi <- test_matrix*(fg$coefficients)}
   return(cbind(test, caus1.xi))
 }
 
@@ -136,12 +135,14 @@ GLM.weight <- function(train, test, formula, df, Time, status) {
   return(predc)
 }
 
-# Split data, generate ave risk for each data
-sig.risk <- function(data, ptb.weight, formula, df, tau, Time, status) {
+# Split data, and generate estimate based on the split (one CV without rep)
+sig.risk <- function(data, ptb.weight, formula, df, tau, Time, status,nosplit) {
   sim.data <- weight(data, ptb.weight, tau, Time, status)
   sample <- sample.int(n = nrow(sim.data), size = floor(0.5 * nrow(sim.data)), replace = FALSE) #two fold CV
   sim1.data <- sim.data[sample, ]
   sim2.data <- sim.data[-sample, ]
+  
+  if(nosplit){sim1.data=sim2.data=sim.data} 
 
   risk1 <- RCS.weight(train = sim1.data, test = sim2.data, formula, df, Time, status)
   risk2 <- RCS.weight(train = sim2.data, test = sim1.data, formula, df, Time, status)
@@ -155,8 +156,8 @@ sig.risk <- function(data, ptb.weight, formula, df, tau, Time, status) {
 
 
 # Repeat CV on same data, calculate multiple times avg
-rpt.risk <- function(data, ptb.weight, cvtimes, formula, df, tau, Time, status) {
-  rep.ptb <- replicate(cvtimes, sig.risk(data, ptb.weight, formula, df, tau, Time, status))
+rpt.risk <- function(data, ptb.weight, cvtimes, formula, df, tau, Time, status,nosplit=FALSE) {
+  rep.ptb <- replicate(cvtimes, sig.risk(data, ptb.weight, formula, df, tau, Time, status,nosplit))
   avg.ptb <- data.frame(matrix(unlist(rep.ptb), nrow = cvtimes, byrow = TRUE))
   rpt.perturb <- colMeans(avg.ptb)
   return(rpt.perturb)
